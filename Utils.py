@@ -3,7 +3,7 @@ import torch.nn as nn
 import matplotlib.pyplot as plt
 import time
 
-def evaluate_model(model, loader, criterion):
+def evaluate_model(model, loader, criterion, device):
     total_loss = 0.0
     total_samples = 0
 
@@ -13,6 +13,10 @@ def evaluate_model(model, loader, criterion):
     with torch.no_grad():
         for data in loader:
             masked, raw = data
+
+            masked = masked.to(device=device)
+            raw = raw.to(device=device)
+
             outputs = model(masked)
             loss = criterion(outputs, raw)
 
@@ -23,20 +27,23 @@ def evaluate_model(model, loader, criterion):
     return average_loss
 
 def plot_test_sample(model, test_loader):
-    # Get one batch from the test loader
-    bert_signal, raw_signal = next(iter(test_loader))
-    
-    # Forward pass to get model predictions
-    generated_signal = model(bert_signal)
-    
-    # Convert torch tensors to numpy arrays
-    bert_signal = bert_signal.numpy()
-    raw_signal = raw_signal.numpy()
-    generated_signal = generated_signal.detach().numpy()
-    
-    # Plot the signals
-    save_path = 'test_sample_result.png'
-    plot_output(raw_signal[0], bert_signal[0], generated_signal[0], save_path)
+    for i in range(3):
+        for test_masked, test_raw in test_loader:  
+            masked_signal = test_masked[i]    # Reshape them according to your needs.
+            raw_signal = test_raw[i]
+            
+
+        # Forward pass to get model predictions
+        generated_signal = model(masked_signal)
+        
+        # Convert torch tensors to numpy arrays
+        masked_signal = masked_signal.numpy()
+        raw_signal = raw_signal.numpy()
+        generated_signal = generated_signal.detach().numpy()
+        
+        # Plot the signals
+        save_path = f'test_sample_result_{i}.png'
+        plot_output(raw_signal[0], masked_signal[0], generated_signal[0], save_path)
 
 
 def plot_output(raw_signal, bert_signal, generated_signal, save_path):    

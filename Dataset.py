@@ -2,34 +2,29 @@ import pandas as pd
 import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
-import h5py
-
+import pickle
+from torch.nn.utils.rnn import pad_sequence
+from tqdm import tqdm
 class ULSignalDataset(Dataset):
-    def __init__(self, csv_path, elements_in_group, mask_p):
-        with h5py.File(csv_path, "r") as f:
-            raw_data = np.array(f['tracings'])
-            self.raw_data = raw_data[:, :, 0]
-        
-        self.preprocess_raw_data(elements_in_group, mask_p)
+    def __init__(self, csv_path):
+        print('Loading Dataset.....')
+        with open(csv_path, 'rb') as file:
+            database = pickle.load(file)
+        print('Load successful.')
+        self.raw_data = database[0:1000]
+        self.preprocess_raw_data()
 
-    def preprocess_raw_data(self, elements_in_group, mask_p):
+    def preprocess_raw_data(self):
+        print("Reshaping data.....")
+        tensor_dataset = [torch.tensor(sample, dtype=torch.float) for sample in self.raw_data]
+        padded_dataset = pad_sequence(tensor_dataset, batch_first=True, padding_value=0)
+        final_database = torch.stack([tensor.reshape((1, -1)) for tensor in padded_dataset])
 
-        num_groups = int(4096 / elements_in_group)
+        self.raw = final_database
+        self.masked = final_database
+        print("Done reshaping.")
 
-        masked_data = self.raw_data.copy()
 
-        # for i, sample in enumerate(self.raw_data):
-        #     groups_to_mask = np.random.choice([0, 1], size=num_groups, p=[mask_p, 1 - mask_p])
-
-        #     for j in range(num_groups):
-        #         if groups_to_mask[j] == 0:
-        #             start_idx = j * elements_in_group
-        #             end_idx = (j + 1) * elements_in_group
-        #             masked_data[i, start_idx:end_idx] = 0
-        
-        self.raw = torch.tensor(self.raw_data, dtype=torch.float)
-        self.masked = torch.tensor(masked_data, dtype=torch.float)
-    
     def get_num_features(self):
         return self.raw.shape[1]
     
@@ -48,9 +43,9 @@ class ULSignalDataset(Dataset):
     def get_num_features(self):
         return self.raw.shape[1]
 
-def get_data_loaders(data_path, splits, batch_size, elements_in_group, mask_p):
+def get_data_loaders(data_path, splits, batch_size):
 
-    dataset = ULSignalDataset(data_path, elements_in_group, mask_p)
+    dataset = ULSignalDataset(data_path)
     
     num_features = dataset.get_num_features()
 
