@@ -1,21 +1,23 @@
 import torch
-import torch.nn as nn
 import matplotlib.pyplot as plt
-import time
 
-def evaluate_model(model, loader, criterion, device):
+def evaluate_model(training_output, test_loader, criterion, device):
+    model, loss_history = training_output
+    model.eval()
+
+    calculate_acc(model, test_loader, criterion, device)
+    plot_loss(loss_history)
+    plot_test_sample(model, test_loader, device)
+    
+   
+def calculate_acc(model, test_loader, criterion, device):
     total_loss = 0.0
     total_samples = 0
 
-    # set the model to evaluation mode
-    model.eval()
-
     with torch.no_grad():
-        for data in loader:
+        for data in test_loader:
             masked, raw = data
-
-            masked = masked.to(device=device)
-            raw = raw.to(device=device)
+            masked, raw = masked.to(device=device), raw.to(device=device)
 
             outputs = model(masked)
             loss = criterion(outputs, raw)
@@ -24,40 +26,54 @@ def evaluate_model(model, loader, criterion, device):
             total_samples += raw.size(0)
 
     average_loss = total_loss / total_samples
-    return average_loss
+    
+    print()
+    print(f'test error using the {criterion} metric: {average_loss}')
 
-def plot_test_sample(model, test_loader):
+
+def plot_loss(loss_history):
+    train_loss, val_loss = loss_history['train'], loss_history['validation']
+    
+    plt.plot(train_loss, label='Training Loss')
+    plt.plot(val_loss, label='validation Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.title('Training Loss Over Epochs')
+    plt.legend()
+    plt.savefig('TrainingLoss.png')
+
+    print('Loss plot saved.')
+
+
+def plot_test_sample(model, test_loader, device):
     for i in range(3):
         for test_masked, test_raw in test_loader:  
-            masked_signal = test_masked[i]    # Reshape them according to your needs.
+            masked_signal = test_masked[i]
             raw_signal = test_raw[i]
-            
-
-        # Forward pass to get model predictions
+        
+        masked_signal = masked_signal.to(device=device)
         generated_signal = model(masked_signal)
         
         # Convert torch tensors to numpy arrays
-        masked_signal = masked_signal.numpy()
         raw_signal = raw_signal.numpy()
-        generated_signal = generated_signal.detach().numpy()
+        generated_signal = generated_signal.detach().cpu().numpy()
         
         # Plot the signals
         save_path = f'test_sample_result_{i}.png'
-        plot_output(raw_signal[0], masked_signal[0], generated_signal[0], save_path)
+        plot_output(raw_signal[0], generated_signal[0], save_path)
+    
+    print('All plots saved.')
 
 
-def plot_output(raw_signal, bert_signal, generated_signal, save_path):    
-    # Plot the signals
+def plot_output(raw_signal, generated_signal, save_path):    
+
     plt.figure(figsize=(10, 6))
     plt.plot(raw_signal, label='Expected Signal', color = 'red')
     plt.plot(generated_signal, label='Generated Signal', color = 'green')
-    # plt.plot(bert_signal, label='Original Signal', color = 'blue')
-    
-    # Customize the plot
-    plt.title('Comparison of Signals')
+    plt.title('Comparison of Signalss')
     plt.xlabel('Time')
     plt.ylabel('Amplitude')
-    plt.legend()
-    
-    # Save the plot
+    plt.legend()    
     plt.savefig(save_path)
+
+

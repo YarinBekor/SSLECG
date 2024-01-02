@@ -1,10 +1,9 @@
-import pandas as pd
-import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
 import pickle
 from torch.nn.utils.rnn import pad_sequence
-from tqdm import tqdm
+
+
 class ULSignalDataset(Dataset):
     def __init__(self, csv_path):
         print('Loading Dataset.....')
@@ -41,7 +40,7 @@ class ULSignalDataset(Dataset):
         return self.raw.shape[0]
     
     def get_num_features(self):
-        return self.raw.shape[1]
+        return self.raw.shape[2]
 
 def get_data_loaders(data_path, splits, batch_size):
 
