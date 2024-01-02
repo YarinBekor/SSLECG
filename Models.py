@@ -55,7 +55,7 @@ class ConvAutoEncoder(nn.Module):
 
     def forward(self, x):
         # Add noise to the input
-        # x = self.dropout(x)
+        x = self.dropout(x)
 
         # Forward pass through encoder
         x = self.encoder(x)
