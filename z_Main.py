@@ -7,9 +7,6 @@ from Config import *
 import torch
 import torch.nn as nn
 
-highlight_start = "\033[93m"
-highlight_end = "\033[0m"
-
 def main():
 
     ecg_tracings_path = '/MLAIM/databases/CODE/relevant_samples_data.pkl'
@@ -18,17 +15,16 @@ def main():
 
     model_name = 'ConvAutoEncoder'
     params = model_params[model_name]
-
-    print(f'Running model {highlight_start}{model_name}{highlight_end} with the following configs:')
-    print(params)
+    
+    intro_printer(model_name, params)
 
     batch_size = params['batch size']
     criterion = params['criterion']
+    optimizer = params['optimizer']
     data_splits = params['splits']
+    drop_out = params['drop out']
     epochs = params['epochs']
     lr = params['lr']
-    optimizer = params['optimizer']
-    drop_out = params['drop out']
 
     train_loader, val_loader, test_loader, num_features = get_data_loaders(data_path=ecg_tracings_path,
                                                                            splits=data_splits,

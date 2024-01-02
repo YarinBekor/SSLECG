@@ -77,3 +77,13 @@ def plot_output(raw_signal, generated_signal, save_path):
     plt.savefig(save_path)
 
 
+def intro_printer(model_name, params):
+    highlight_start = "\033[93m"
+    highlight_end = "\033[0m"
+
+    print()
+    print()
+    print(f'Running model {highlight_start}{model_name}{highlight_end} with the following configs:')
+    print()
+    print(params)
+    print()
