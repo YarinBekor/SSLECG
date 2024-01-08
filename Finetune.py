@@ -3,18 +3,19 @@ from Trainer import *
 from Models import *
 from Utils import *
 from Config import *
+from FineTune import *
 
 
-def main():
+def main_fine_tuner(encoder):
 
-    ecg_tracings_path = '/MLAIM/databases/CODE/relevant_samples_data.pkl'
-    pre_trained_model_path = 'best_model.ckpt'
+    downstrim_data_path = '/MLAIM/databases/CODE/relevant_samples_data.pkl'
+
     device='cuda'
 
-    model_name = 'ConvAutoEncoder'
-    params = model_params[model_name]
+    tuner_name = 'FineTuner'
+    params = model_params[tuner_name]
     
-    intro_printer(model_name, params, device)
+    intro_printer(tuner_name, params, device)
 
     batch_size = params['batch size']
     criterion = params['criterion']
@@ -24,16 +25,23 @@ def main():
     epochs = params['epochs']
     lr = params['lr']
 
-    train_loader, val_loader, test_loader, num_features = get_data_loaders(data_path=ecg_tracings_path,
+    train_loader, val_loader, test_loader, num_features = get_data_loaders(data_path=downstrim_data_path,
                                                                            splits=data_splits,
                                                                            batch_size=batch_size,
                                                                            )
+    
 
-    model = init_model(model_name, num_features, drop_out)
+    pre_trained_model_path = 'best_model.ckpt'
+    foundational_model = init_model(num_features)
+    foundational_model.load_state_dict(torch.load(pre_trained_model_path))
+    model.eval()
+
+    model = init_model(tuner_name, model.encoder(), num_features, drop_out)
     
     optimizer = optimizer(model.parameters(), lr=lr)
-
-    training_output = train(model=model,
+    
+    training_output = train_tuner(model=model,
+                        encoder=encoder,
                         optimizer=optimizer,
                         criterion=criterion,
                         epochs=epochs,
@@ -45,6 +53,3 @@ def main():
         
 
 
-
-if __name__ == '__main__':
-    main()

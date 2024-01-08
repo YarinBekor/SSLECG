@@ -1,8 +1,9 @@
 import torch
 from tqdm import tqdm
 
-def train(model, optimizer, criterion, epochs, train_loader, val_loader, device, save_path='best_model1.ckpt', patience=5):
+def train_tuner(model, encoder, optimizer, criterion, epochs, train_loader, val_loader, device, save_path='best_model1.ckpt', patience=5):
     model.to(device)
+    encoder.to(device)
     loss_history = {'train': [], 'validation': []}
 
     best_val_loss = float('inf')
@@ -15,10 +16,11 @@ def train(model, optimizer, criterion, epochs, train_loader, val_loader, device,
         for i, data in enumerate(train_loader, 0):
             inputs, labels = data
             inputs, labels = inputs.to(device, non_blocking=True), labels.to(device, non_blocking=True)
-
+            with torch.no_grad:
+                encoded_inputs = encoder(inputs)
+            
             optimizer.zero_grad()
-
-            outputs = model(inputs)
+            outputs = model(encoded_inputs)
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
@@ -42,7 +44,10 @@ def train(model, optimizer, criterion, epochs, train_loader, val_loader, device,
                 val_inputs, val_labels = val_data
                 val_inputs, val_labels = val_inputs.to(device), val_labels.to(device)
 
-                val_outputs = model(val_inputs)
+                with torch.no_grad:
+                    encoded_val_inputs = encoder(val_inputs)
+            
+                val_outputs = model(encoded_val_inputs)
                 val_loss = criterion(val_outputs, val_labels)
 
                 running_val_loss += val_loss.item()

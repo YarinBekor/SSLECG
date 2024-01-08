@@ -77,13 +77,14 @@ def plot_output(raw_signal, generated_signal, save_path):
     plt.savefig(save_path)
 
 
-def intro_printer(model_name, params):
+def intro_printer(model_name, params, device):
     highlight_start = "\033[93m"
     highlight_end = "\033[0m"
-
+    model_for_print = f'{highlight_start}{model_name}{highlight_end}'
+    device_for_print = f'{highlight_start}{device}{highlight_end}'
     print()
     print()
-    print(f'Running model {highlight_start}{model_name}{highlight_end} with the following configs:')
+    print(f'Running model {model_for_print} on {device_for_print} with the following configs:')
     print()
     print(params)
     print()

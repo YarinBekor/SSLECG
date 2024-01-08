@@ -6,12 +6,12 @@ from torch.nn.utils.rnn import pad_sequence
 
 class ULSignalDataset(Dataset):
     def __init__(self, csv_path):
-        print('Loading Dataset.....')
+        print('Loading Dataset...')
         with open(csv_path, 'rb') as file:
             database = pickle.load(file)
-        self.raw_data = database[0:1000]
+        self.raw_data = database[0:100000]
         self.preprocess_raw_data()
-        print('Load successful.')
+        print('Load successful..')
 
     def preprocess_raw_data(self):
         tensor_dataset = [torch.tensor(sample, dtype=torch.float) for sample in self.raw_data]
@@ -49,12 +49,12 @@ def get_data_loaders(data_path, splits, batch_size):
     train_set, val_set, test_set = torch.utils.data.random_split(dataset, splits)
 
     train_loader = DataLoader(train_set, batch_size=batch_size,
-                          shuffle=True, num_workers=1)
+                          shuffle=True, num_workers=4, pin_memory=True)
 
     val_loader = DataLoader(val_set, batch_size=batch_size,
-                            shuffle=True, num_workers=1)
+                            shuffle=True, num_workers=4, pin_memory=True)
 
     test_loader = DataLoader(test_set, batch_size=batch_size,
-                            shuffle=True, num_workers=1)
+                            shuffle=True, num_workers=4, pin_memory=True)
     
     return train_loader, val_loader, test_loader, num_features
